@@ -120,16 +120,17 @@ class SerialRfid:
     tagdata = int(tagdata, 16)
     print "debug: tagid:%i" % tagdata
 
-    cksum_read = int(cksum_read_ascii, 16)
+#    cksum_read = int(cksum_read_ascii, 16)
 #    cksum_read = cksum_read_ascii
 
-    for x in data[1:9]:
-      cksum_calc = cksum_calc ^ int(x, 16)
-      print "cksum: %x" % cksum_calc
-    if cksum_calc != cksum_read:
-      print "cksum do not match"
-    else:
-      result = data
+#    for x in data[1:9]:
+#      cksum_calc = cksum_calc ^ int(x, 16)
+#      print "cksum: %x" % cksum_calc
+#    if cksum_calc != cksum_read:
+#      print "cksum do not match"
+#    else:
+#      result = data
+    result = tagdata
     print "data:" + binascii.hexlify(data)
     return result
 

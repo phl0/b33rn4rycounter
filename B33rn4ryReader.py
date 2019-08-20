@@ -116,9 +116,9 @@ class SerialRfid:
     print "debug: data:" + data + "; cksum:" + cksum_read_ascii
 #        print "debug: " + hex(int(data, 16))
 #        print str(binascii.a2b_hex(data))
-    tagdata = data[1:9]
-    tagdata = int(tagdata, 16)
-    print "debug: tagid:%i" % tagdata
+    tagdata = data[0:8]
+#    tagdata = int(tagdata, 16)
+#    print "debug: tagid:%i" % tagdata
 
 #    cksum_read = int(cksum_read_ascii, 16)
 #    cksum_read = cksum_read_ascii

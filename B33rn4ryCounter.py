@@ -147,6 +147,8 @@ def main():
     syslog.syslog(syslog.LOG_ERR, "Keg-setup wrong !!!!")
     time.sleep(2)
 
+  numberOfNullReadings = 0
+
   syslog.syslog("B33rn4ry Counter ready")
 
   while True:
@@ -167,52 +169,63 @@ def main():
 
     try:
       ID = reader.read_rfid()
-    except B33rn4ryExceptions.InvalidRfidReading:
-      ID = None
 
-    print("ID read:", ID)
-    if ID:
-      if ID != IDtmp:
+      print("ID read:", ID)
+      if ID:
+        print "is a tag"
+        numberOfNullReadings = 0
+        if ID != IDtmp:
 #        pID = str(int(ID[2:], 16))
-        pID = ID
-        lcd_backlight(True)
+          pID = ID
+          lcd_backlight(True)
 #         lcd_string("Reading RFID tag ...",LCD_LINE_1,1)
 #         lcd_string("ID:   "+ pID.zfill(10),LCD_LINE_2,1)
 #        syslog.syslog(syslog.LOG_DEBUG, "read ID:"+ pID)
-        result = db.checkUser('{:08X}'.format(ID))
-        if result is not None:
-          if (IdPulsesStart is None):
-            IdPulsesStart = currentKeg.getPulses()
-          lcd_string("User: "+str(result[0]),LCD_LINE_3,1)
-          lcd_string("ACCESS GRANTED!",LCD_LINE_3,1)#
-          lcd_string("Go ahead and draw a beer!",LCD_LINE_4,1)
-          syslog.syslog("ACCESS GRANTED!")
+          result = db.checkUser('{:08X}'.format(ID))
+          if result is not None:
+            if (IdPulsesStart is None):
+              IdPulsesStart = currentKeg.getPulses()
+            lcd_string("User: "+str(result[0]),LCD_LINE_3,1)
+            lcd_string("ACCESS GRANTED!",LCD_LINE_3,1)#
+            lcd_string("Go ahead and draw a beer!",LCD_LINE_4,1)
+            syslog.syslog("ACCESS GRANTED!")
           #os.system('mpg321 access_granted.mp3 2>&1 > /dev/null &')
-          valve(True)
-          IDtmp = ID
-	  print "drafting: Event: %d; keg: %d" % (currentEvent[0], kegID)
-        else:
+            valve(True)
+            IDtmp = ID
+	    print "drafting: Event: %d; keg: %d" % (currentEvent[0], kegID)
+          else:
+            if (IdPulsesStart is not None):
+              db.storeDraft(IDtmp, currentKeg.getPulses() - IdPulsesStart)
+              db.setKegPulses(kegID, currentKeg.getPulses())
+            IdPulsesStart = None
+            lcd_string("ACCESS DENIED!",LCD_LINE_3,1)
+            lcd_string("                    ",LCD_LINE_4,1)
+            syslog.syslog("ACCESS DENIED!")
+          #os.system('mpg321 sadtrombone.mp3')
+
+      elif numberOfNullReadings >= 3:
+          valve(False)
           if (IdPulsesStart is not None):
             db.storeDraft(IDtmp, currentKeg.getPulses() - IdPulsesStart)
             db.setKegPulses(kegID, currentKeg.getPulses())
           IdPulsesStart = None
-          lcd_string("ACCESS DENIED!",LCD_LINE_3,1)
-          lcd_string("                    ",LCD_LINE_4,1)
-          syslog.syslog("ACCESS DENIED!")
-          #os.system('mpg321 sadtrombone.mp3')
+          lcd_backlight(False)
+          lcd_string("B33rn4ry Counter",LCD_LINE_1,1)
+          lcd_string("Idle",LCD_LINE_2,1)
+          lcd_string("                    ",LCD_LINE_3,1)
+          lcd_string("Waiting for Geeks",LCD_LINE_4,1)
+          IDtmp = ""
+          numberOfNullReadings = 0
+      else:
+#          print "increadfe NullCount"
+          numberOfNullReadings = numberOfNullReadings + 1
 
-    else:
-      valve(False)
-      if (IdPulsesStart is not None):
-        db.storeDraft(IDtmp, currentKeg.getPulses() - IdPulsesStart)
-        db.setKegPulses(kegID, currentKeg.getPulses())
-      IdPulsesStart = None
-      lcd_backlight(False)
-      lcd_string("B33rn4ry Counter",LCD_LINE_1,1)
-      lcd_string("Idle",LCD_LINE_2,1)
-      lcd_string("                    ",LCD_LINE_3,1)
-      lcd_string("Waiting for Geeks",LCD_LINE_4,1)
-      IDtmp = ""
+    except B33rn4ryExceptions.InvalidRfidReading:
+      ID = None
+      numberOfNullReadings = numberOfNullReadings + 1
+    except B33rn4ryExceptions.NoneRfidReading:
+      ID = None
+      numberOfNullReadings = numberOfNullReadings + 1
 
 def lcd_init():
   # Initialise display

@@ -85,6 +85,7 @@ class SerialRfid:
 #        self.ser.reset_input_buffer()
           self.ser.flushInput()
           self.state = self.STATE_IDLE
+          raise B33rn4ryExceptions.InvalidRfidReading("invalid reading")
         # read next byte, which sould be the STOP-Byte
 #        data = self.ser.read(1)
 #        self.ser.reset_input_buffer()

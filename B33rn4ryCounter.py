@@ -165,7 +165,10 @@ def main():
       syslog.syslog(syslog.LOG_ERR, "Keg-setup wrong !!!!")
       time.sleep(2)
 
-    ID = reader.read_rfid()
+    try:
+      ID = reader.read_rfid()
+    except B33rn4ryExceptions.InvalidRfidReading:
+      ID = None
 
     print("ID read:", ID)
     if ID:

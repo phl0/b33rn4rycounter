@@ -130,7 +130,7 @@ class SerialRfid:
 #      print "cksum do not match"
 #    else:
 #      result = data
-    result = tagdata
+    result = "2" + tagdata
     print "data:" + binascii.hexlify(data)
     return result
 
